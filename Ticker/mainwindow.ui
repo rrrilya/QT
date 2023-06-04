@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>900</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>900</width>
+    <height>900</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>images/ticker-logo.png</normaloff>images/ticker-logo.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QCalendarWidget" name="calendarWidget"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton">
+      <property name="text">
+       <string>Купить</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_2">
+      <property name="text">
+       <string>Вернуть</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_3">
+      <property name="text">
+       <string>Мои билеты</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>900</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuTicker">
+    <property name="title">
+     <string>Ticker</string>
+    </property>
+    <widget class="QMenu" name="menuTest_mode">
+     <property name="title">
+      <string>Test mode</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="actionTest_Mode_1"/>
+    </widget>
+    <addaction name="menuTest_mode"/>
+   </widget>
+   <addaction name="menuTicker"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionAdd_Concert">
+   <property name="text">
+    <string>Add Concert</string>
+   </property>
+  </action>
+  <action name="actionTest_Mode_1">
+   <property name="text">
+    <string>сгенерировать концерты</string>
+   </property>
+  </action>
+  <action name="actionTest_Mode_3">
+   <property name="text">
+    <string>Выключить</string>
+   </property>
+  </action>
+  <action name="actionMyBalance_2">
+   <property name="text">
+    <string>,аланс</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

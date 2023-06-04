@@ -1,0 +1,10 @@
+release/balancestorage.o
+release/concertsbydatedialog.o
+release/main.o
+release/mainwindow.o
+release/mainwindowbuy.o
+release/mainwindowreturn.o
+release/moc_concertsbydatedialog.o
+release/moc_mainwindow.o
+release/moc_mainwindowbuy.o
+release/moc_mainwindowreturn.o
