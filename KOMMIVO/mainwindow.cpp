@@ -56,7 +56,6 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(reshButton, 4, 0);
     layout->addWidget(adjacencyMatrixButton, 4, 1);
 
-    // Изменения начинаются здесь
     QVBoxLayout *rightLayout = new QVBoxLayout;
     rightLayout->addWidget(graphWidget);
     rightLayout->setAlignment(Qt::AlignTop);
