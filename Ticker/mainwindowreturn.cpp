@@ -141,8 +141,6 @@ void MainWindowReturn::refundMoneyToAccount(const QString& )
             if (fields.size() == 2 && fields.at(0) == "Account Balance")
             {
                 double accountBalance = fields.at(1).toDouble();
-                // Найден баланс счета, можно начислить сумму возврата
-                // Например, если refundAmount - сумма возврата
                 accountBalance += 1;
 
                 // Обновляем баланс счета
