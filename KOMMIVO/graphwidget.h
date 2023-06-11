@@ -32,10 +32,10 @@ public:
     GraphWidget(QWidget* parent = nullptr) : QGraphicsView(parent) {
         setRenderHint(QPainter::Antialiasing);
         setScene(new QGraphicsScene(this));
-        void setGraph(const Graph& graph); // Добавьте эту функцию для установки графа
-        void setOptimalPath(const PathInfo& optimalPath); // Добавьте эту функцию для установки оптимального пути
-        void reshGraph(); // Обновленная функция reshGraph
-        void visGraph(); // Обновленная функция visGrap
+        void setGraph(const Graph& graph); 
+        void setOptimalPath(const PathInfo& optimalPath);
+        void reshGraph(); 
+        void visGraph(); 
     }
 
     void reshGraph(const Graph& graph, const PathInfo& optimalPath);
