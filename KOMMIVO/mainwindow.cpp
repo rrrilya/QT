@@ -162,29 +162,73 @@ PathInfo solveTSP(const Graph& graph, int startVertex) {
 
 void MainWindow::resh()
 {
-    int vertexCount = graph.getNumVertices();
-    startVertex = QInputDialog::getInt(this, "Стартовая вершина", "Введите номер вершины", 0, 0, vertexCount - 1, 1);
+    if (!graph)
+    {
+        QMessageBox::warning(this, "Ошибка", "Граф не создан!");
+        return;
+    }
 
-    PathInfo optimalPath = solveTSP(graph, startVertex);
+    // Отображение диалогового окна для выбора начальной вершины
+    bool ok;
+    int startVertex = QInputDialog::getInt(this, "Начальная вершина", "Введите номер начальной вершины (от 0 до " +
+                                                   QString::number(graph->vertexCount() - 1) + "):", 0, 0,
+                                                   graph->vertexCount() - 1, 1, &ok);
+    if (!ok)
+        return;
 
-    if (!optimalPath.path.empty()) {
-        QString optimalPathString = "Оптимальный путь: ";
-        for (int vertex : optimalPath.path) {
-            optimalPathString += QString::number(vertex) + " ";
+    vector<int> dist(graph->vertexCount(), INF); // Массив расстояний до каждой вершины
+    vector<bool> visited(graph->vertexCount(), false); // Массив для отметки посещенных вершин
+    dist[startVertex] = 0; // Расстояние до начальной вершины равно 0
+
+    // Цикл по всем вершинам графа
+    for (int i = 0; i < graph->vertexCount(); ++i)
+    {
+        int currentVertex = -1;
+        int minDist = INF;
+
+        // Находим непосещенную вершину с минимальным расстоянием
+        for (int j = 0; j < graph->vertexCount(); ++j)
+        {
+            if (!visited[j] && dist[j] < minDist)
+            {
+                minDist = dist[j];
+                currentVertex = j;
+            }
         }
-        optimalPathString += QString::number(startVertex);
 
-        QString costString = "Путь: " + QString::number(optimalPath.cost);
+        // Если не удалось найти непосещенную вершину, алгоритм завершается
+        if (currentVertex == -1)
+            break;
 
-        QMessageBox::information(this, "Результаты", optimalPathString + "\n" + costString);
+        visited[currentVertex] = true; // Помечаем текущую вершину как посещенную
 
-        graphWidget->reshGraph(graph, optimalPath);
+        // Обновляем расстояния до смежных вершин
+        for (int j = 0; j < graph->vertexCount(); ++j)
+        {
+            if (graph->isConnected(currentVertex, j) && !visited[j])
+            {
+                int weight = graph->getWeight(currentVertex, j);
+                if (dist[currentVertex] + weight < dist[j])
+                {
+                    dist[j] = dist[currentVertex] + weight;
+                }
+            }
+        }
     }
-    else {
-        QMessageBox::information(this, "Результаты", "Не удалось найти оптимальный путь.");
+
+    // Отображение результатов алгоритма
+    QString result;
+    for (int i = 0; i < graph->vertexCount(); ++i)
+    {
+        result += "Расстояние до вершины " + QString::number(i) + ": ";
+        if (dist[i] == INF)
+            result += "недостижимо";
+        else
+            result += QString::number(dist[i]);
+        result += "\n";
     }
 
-
+    QMessageBox::information(this, "Результаты", result);
 }
 
 void MainWindow::onVertexCountChanged(const QString& text)
