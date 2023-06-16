@@ -10,10 +10,8 @@
 
 using namespace std;
 
-
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow), graph(0)
+    : QMainWindow(parent), ui(new Ui::MainWindow), graph(0)
 {
     ui->setupUi(this);
     setStyleSheet("background-color: #333333; color: #ffffff;");
@@ -69,7 +67,6 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(widget);
 }
 
-
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -77,257 +74,210 @@ MainWindow::~MainWindow()
 
 const int INF = numeric_limits<int>::max();
 
-int findMin(const vector<int>& arr) {
-    int minVal = INF;
-    for (int i = 0; i < arr.size(); i++) {
-        if (arr[i] < minVal) {
-            minVal = arr[i];
-        }
-    }
-    return minVal;
-}
-
-int findMinIndex(const vector<int>& arr) {
-    int minIndex = -1;
-    int minVal = INF;
-    for (int i = 0; i < arr.size(); i++) {
-        if (arr[i] < minVal) {
-            minVal = arr[i];
-            minIndex = i;
-        }
-    }
-    return minIndex;
-}
-
-PathInfo solveTSP(const Graph& graph, int startVertex) {
-    int numVertices = graph.getNumVertices();
-
-    priority_queue<PathInfo, vector<PathInfo>, function<bool(const PathInfo&, const PathInfo&)>> pq(
-        [](const PathInfo& p1, const PathInfo& p2) {
-            return p1.cost > p2.cost;
-        }
-        );
-
-    vector<int> path;
-    path.push_back(startVertex);
-    PathInfo initialPath(path, 0);
-    pq.push(initialPath);
-
-    int lowerBound = INF;
-
-    while (!pq.empty()) {
-        PathInfo currentPath = pq.top();
-        pq.pop();
-
-        int currentVertex = currentPath.path.back();
-        int currentCost = currentPath.cost;
-
-        if (currentPath.path.size() == numVertices) {
-            int finalCost = currentCost + graph.getEdgeWeight(currentVertex, startVertex);
-            return PathInfo(currentPath.path, finalCost);
-        }
-
-        vector<int> remainingVertices = graph.getVertices();
-        for (int vertex : currentPath.path) {
-            remainingVertices.erase(remove(remainingVertices.begin(), remainingVertices.end(), vertex), remainingVertices.end());
-        }
-
-        for (int nextVertex : remainingVertices) {
-            int edgeWeight = graph.getEdgeWeight(currentVertex, nextVertex);
-
-            if (edgeWeight == 0)
-                continue;
-
-            int nextCost = currentCost + edgeWeight;
-
-            int minRemainingEdgeWeight = INF;
-            for (int vertex : remainingVertices) {
-                int remainingEdgeWeight = graph.getEdgeWeight(nextVertex, vertex);
-                if (remainingEdgeWeight < minRemainingEdgeWeight)
-                    minRemainingEdgeWeight = remainingEdgeWeight;
-            }
-            int lowerBoundCost = nextCost + minRemainingEdgeWeight;
-            if (lowerBoundCost >= lowerBound)
-                continue;
-
-            vector<int> newPath = currentPath.path;
-            newPath.push_back(nextVertex);
-            PathInfo newPathInfo(newPath, nextCost);
-            pq.push(newPathInfo);
-        }
-    }
-
-    return PathInfo({}, INF);
-}
-
-void MainWindow::resh()
+int findMin(const vector<int> &arr)
 {
-    if (!graph)
+    return *min_element(arr.begin(), arr.end());
+}
+
+int findMinIndex(const vector<int> &arr)
+{
+    auto minElement = min_element(arr.begin(), arr.end());
+    return minElement != arr.end() ? distance(arr.begin(), minElement) : -1;
+}
+
+struct Edge
+{
+    int source;
+    int destination;
+    int weight;
+};
+
+class Graph
+{
+public:
+    int vertexCount;
+    vector<vector<int>> adjacencyMatrix;
+
+    Graph(int count)
     {
-        QMessageBox::warning(this, "Ошибка", "Граф не создан!");
-        return;
+        vertexCount = count;
+        adjacencyMatrix.resize(vertexCount, vector<int>(vertexCount, INF));
     }
 
-    // Отображение диалогового окна для выбора начальной вершины
-    bool ok;
-    int startVertex = QInputDialog::getInt(this, "Начальная вершина", "Введите номер начальной вершины (от 0 до " +
-                                                   QString::number(graph->vertexCount() - 1) + "):", 0, 0,
-                                                   graph->vertexCount() - 1, 1, &ok);
-    if (!ok)
-        return;
-
-    vector<int> dist(graph->vertexCount(), INF); // Массив расстояний до каждой вершины
-    vector<bool> visited(graph->vertexCount(), false); // Массив для отметки посещенных вершин
-    dist[startVertex] = 0; // Расстояние до начальной вершины равно 0
-
-    // Цикл по всем вершинам графа
-    for (int i = 0; i < graph->vertexCount(); ++i)
+    void addEdge(int source, int destination, int weight)
     {
-        int currentVertex = -1;
-        int minDist = INF;
+        adjacencyMatrix[source][destination] = weight;
+        adjacencyMatrix[destination][source] = weight;
+    }
 
-        // Находим непосещенную вершину с минимальным расстоянием
-        for (int j = 0; j < graph->vertexCount(); ++j)
+    void removeEdge(int source, int destination)
+    {
+        adjacencyMatrix[source][destination] = INF;
+        adjacencyMatrix[destination][source] = INF;
+    }
+
+    vector<Edge> getEdges()
+    {
+        vector<Edge> edges;
+        for (int i = 0; i < vertexCount; ++i)
         {
-            if (!visited[j] && dist[j] < minDist)
+            for (int j = i + 1; j < vertexCount; ++j)
             {
-                minDist = dist[j];
-                currentVertex = j;
-            }
-        }
-
-        // Если не удалось найти непосещенную вершину, алгоритм завершается
-        if (currentVertex == -1)
-            break;
-
-        visited[currentVertex] = true; // Помечаем текущую вершину как посещенную
-
-        // Обновляем расстояния до смежных вершин
-        for (int j = 0; j < graph->vertexCount(); ++j)
-        {
-            if (graph->isConnected(currentVertex, j) && !visited[j])
-            {
-                int weight = graph->getWeight(currentVertex, j);
-                if (dist[currentVertex] + weight < dist[j])
+                if (adjacencyMatrix[i][j] != INF)
                 {
-                    dist[j] = dist[currentVertex] + weight;
+                    Edge edge;
+                    edge.source = i;
+                    edge.destination = j;
+                    edge.weight = adjacencyMatrix[i][j];
+                    edges.push_back(edge);
                 }
             }
         }
+        return edges;
     }
+};
 
-    // Отображение результатов алгоритма
-    QString result;
-    for (int i = 0; i < graph->vertexCount(); ++i)
-    {
-        result += "Расстояние до вершины " + QString::number(i) + ": ";
-        if (dist[i] == INF)
-            result += "недостижимо";
-        else
-            result += QString::number(dist[i]);
-        result += "\n";
-    }
-
-    QMessageBox::information(this, "Результаты", result);
-}
-
-void MainWindow::onVertexCountChanged(const QString& text)
+void MainWindow::onVertexCountChanged()
 {
+    QString text = vertexCountLineEdit->text();
     bool ok;
     int vertexCount = text.toInt(&ok);
-
-    if (ok) {
-        updateGraph(vertexCount);
-    } else {
-        QMessageBox::warning(this, "Ошибка", "Пожалуйста, введите целое число вершин.");
+    if (ok)
+    {
+        graph = new Graph(vertexCount);
+        graphWidget->setGraph(graph);
+        graphWidget->update();
     }
 }
 
-void MainWindow::updateGraph(int vertexCount)
+void MainWindow::addVertex()
 {
-    graph = Graph(vertexCount);
-
-    if (vertexCount < 2) {
-        QMessageBox::warning(this, "Ошибка", "Число вершин должно быть не менее 2.");
+    if (graph == nullptr)
+    {
+        QMessageBox::information(this, "Ошибка", "Сначала установите количество вершин");
         return;
     }
-    bool ok = true;
-    while(ok){
-        int startikVertex = QInputDialog::getInt(this, "Начальная вершина", "Введите номер начальной вершины для ребра", 0, 0, vertexCount - 1, 1, &ok);
-        int endVertex = QInputDialog::getInt(this, "Конечная вершина", "Введите номер конечной вершины для ребра", 0, 0, vertexCount - 1, 1, &ok);
-        int weight = QInputDialog::getInt(this, "Вес ребра", "Введите вес ребра", 0, 0, std::numeric_limits<int>::max(), 1, &ok);
-        graph.addEdge(startikVertex, endVertex, weight);
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "Создание ребра", "Хотите создать еще одно ребро?", QMessageBox::Yes | QMessageBox::No);
-        if (reply == QMessageBox::No) {
-            ok = false;
-        }
-    }
-    graphWidget->visGraph(graph);
-}
-
-void MainWindow::showAdjacencyMatrix()
-{
-    int numVertices = graph.getNumVertices();
-    std::vector<std::vector<int>> adjacencyMatrix = graph.getAdjacencyMatrix();
-
-    QString matrixString;
-
-    for (int i = 0; i < numVertices; i++) {
-        for (int j = 0; j < numVertices; j++) {
-            matrixString += QString::number(adjacencyMatrix[i][j]) + "\t";
-        }
-        matrixString += "\n";
-    }
-
-    QMessageBox::information(this, "Матрица смежности", matrixString);
-}
-
-void MainWindow::addVertex() {
-    graph.addVertex();
-    updateGraph(graph.getNumVertices());
-    graphWidget->visGraph(graph);
-}
-
-void MainWindow::addEdge()
-{
-    int numVertices = graph.getNumVertices();
-    int startikVertex = QInputDialog::getInt(this, "Начальная вершина", "Введите номер начальной вершины для ребра", 0, 0, numVertices - 1, 1);
-    int endVertex = QInputDialog::getInt(this, "Конечная вершина", "Введите номер конечной вершины для ребра", 0, 0, numVertices - 1, 1);
-    int weight = QInputDialog::getInt(this, "Вес ребра", "Введите вес ребра", 0, 0, std::numeric_limits<int>::max(), 1);
-    graph.addEdge(startikVertex, endVertex, weight);
-    graphWidget->visGraph(graph);
-}
-
-void MainWindow::removeEdge()
-{
-    bool ok = true;
-    int numVertices = graph.getNumVertices();
-    while(ok){
-        int startikVertex = QInputDialog::getInt(this, "Начальная вершина", "Введите номер начальной вершины для ребра", 0, 0, numVertices - 1, 1, &ok);
-        int endVertex = QInputDialog::getInt(this, "Конечная вершина", "Введите номер конечной вершины для ребра", 0, 0, numVertices - 1, 1, &ok);
-        graph.removeEdge(startikVertex, endVertex);
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "Удаление ребра", "Хотите удалить еще одно ребро?", QMessageBox::Yes | QMessageBox::No);
-        if (reply == QMessageBox::No) {
-            ok = false;
-        }
-    }
-    graphWidget->visGraph(graph);
+    int newVertexCount = graph->vertexCount + 1;
+    graph->adjacencyMatrix.resize(newVertexCount, vector<int>(newVertexCount, INF));
+    graph->vertexCount = newVertexCount;
+    graphWidget->setGraph(graph);
+    graphWidget->update();
 }
 
 void MainWindow::removeVertex()
 {
-    int numVertices = graph.getNumVertices();
-    int Vertex = QInputDialog::getInt(this, "Вершина", "Введите номер удаляемой вершины", 0, 0, numVertices - 1, 1);
-    graph.removeVertex(Vertex);
-    graphWidget->visGraph(graph);
+    if (graph == nullptr)
+    {
+        QMessageBox::information(this, "Ошибка", "Сначала установите количество вершин");
+        return;
+    }
+    int vertexIndex = QInputDialog::getInt(this, "Удаление вершины", "Введите индекс вершины для удаления:");
+    if (vertexIndex < 0 || vertexIndex >= graph->vertexCount)
+    {
+        QMessageBox::information(this, "Ошибка", "Некорректный индекс вершины");
+        return;
+    }
+    graph->adjacencyMatrix.erase(graph->adjacencyMatrix.begin() + vertexIndex);
+    for (int i = 0; i < graph->vertexCount; ++i)
+    {
+        graph->adjacencyMatrix[i].erase(graph->adjacencyMatrix[i].begin() + vertexIndex);
+    }
+    graph->vertexCount--;
+    graphWidget->setGraph(graph);
+    graphWidget->update();
 }
 
-void MainWindow::editWeight()
+void MainWindow::addEdge()
 {
-    int numVertices = graph.getNumVertices();
-    int startikVertex = QInputDialog::getInt(this, "Начальная вершина", "Введите номер начальной вершины для ребра", 0, 0, numVertices - 1, 1);
-    int endVertex = QInputDialog::getInt(this, "Конечная вершина", "Введите номер конечной вершины для ребра", 0, 0, numVertices - 1, 1);
-    int weight = QInputDialog::getInt(this, "Новый вес ребра", "Введите новый вес ребра", 0, 0, std::numeric_limits<int>::max(), 1);
-    graph.editEdgeWeight(startikVertex, endVertex, weight);
-    graphWidget->visGraph(graph);
+    if (graph == nullptr)
+    {
+        QMessageBox::information(this, "Ошибка", "Сначала установите количество вершин");
+        return;
+    }
+    bool ok;
+    int source = QInputDialog::getInt(this, "Добавление ребра", "Введите начальную вершину:", 0, 0, graph->vertexCount - 1, 1, &ok);
+    if (!ok)
+        return;
+    int destination = QInputDialog::getInt(this, "Добавление ребра", "Введите конечную вершину:", 0, 0, graph->vertexCount - 1, 1, &ok);
+    if (!ok)
+        return;
+    int weight = QInputDialog::getInt(this, "Добавление ребра", "Введите вес ребра:", 0, 0, INT_MAX, 1, &ok);
+    if (!ok)
+        return;
+    graph->addEdge(source, destination, weight);
+    graphWidget->update();
+}
+
+void MainWindow::removeEdge()
+{
+    if (graph == nullptr)
+    {
+        QMessageBox::information(this, "Ошибка", "Сначала установите количество вершин");
+        return;
+    }
+    bool ok;
+    int source = QInputDialog::getInt(this, "Удаление ребра", "Введите начальную вершину:", 0, 0, graph->vertexCount - 1, 1, &ok);
+    if (!ok)
+        return;
+    int destination = QInputDialog::getInt(this, "Удаление ребра", "Введите конечную вершину:", 0, 0, graph->vertexCount - 1, 1, &ok);
+    if (!ok)
+        return;
+    graph->removeEdge(source, destination);
+    graphWidget->update();
+}
+
+void MainWindow::runDijkstra()
+{
+    if (graph == nullptr)
+    {
+        QMessageBox::information(this, "Ошибка", "Сначала установите количество вершин");
+        return;
+    }
+    bool ok;
+    int source = QInputDialog::getInt(this, "Алгоритм Дейкстры", "Введите начальную вершину:", 0, 0, graph->vertexCount - 1, 1, &ok);
+    if (!ok)
+        return;
+
+    vector<int> distances(graph->vertexCount, INF);
+    distances[source] = 0;
+
+    vector<bool> visited(graph->vertexCount, false);
+
+    for (int i = 0; i < graph->vertexCount - 1; ++i)
+    {
+        int minDistance = INF;
+        int minVertex = -1;
+
+        for (int j = 0; j < graph->vertexCount; ++j)
+        {
+            if (!visited[j] && distances[j] < minDistance)
+            {
+                minDistance = distances[j];
+                minVertex = j;
+            }
+        }
+
+        if (minVertex == -1)
+            break;
+
+        visited[minVertex] = true;
+
+        for (int j = 0; j < graph->vertexCount; ++j)
+        {
+            int weight = graph->adjacencyMatrix[minVertex][j];
+            if (!visited[j] && weight != INF && distances[minVertex] + weight < distances[j])
+                distances[j] = distances[minVertex] + weight;
+        }
+    }
+
+    QString result;
+    for (int i = 0; i < graph->vertexCount; ++i)
+    {
+        if (distances[i] == INF)
+            result += QString::number(i) + ": INF\n";
+        else
+            result += QString::number(i) + ": " + QString::number(distances[i]) + "\n";
+    }
+
+    QMessageBox::information(this, "Алгоритм Дейкстры", result);
 }
