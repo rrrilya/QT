@@ -1,74 +1,67 @@
 #include "graph.h"
-#include <QMessageBox>
-using namespace std;
 
-Graph::Graph(int vertices) {
-    numVertices = vertices;
-
-    adjacencyMatrix.resize(numVertices, vector<int>(numVertices, 0));
-    for (int i = 0; i < numVertices; i++) {
-        adjacencyMatrix[i][i] = 0;
+Graph::Graph(int numVertices) {
+    for (int i = 0; i < numVertices; ++i) {
+        addVertex();
     }
-}
-
-int Graph::getNumVertices() const {
-    return numVertices;
-}
-
-int Graph::getEdgeWeight(int v1, int v2) const {
-    return adjacencyMatrix[v1][v2];
-}
-
-void Graph::addEdge(int v1, int v2, int weight) {
-    adjacencyMatrix[v1][v2] = weight;
-}
-
-vector<int> Graph::getVertices() const {
-    vector<int> vertices(numVertices);
-    for (int i = 0; i < numVertices; i++) {
-        vertices[i] = i;
-    }
-    return vertices;
 }
 
 void Graph::addVertex() {
-    numVertices++;
-    adjacencyMatrix.resize(numVertices, vector<int>(numVertices, 0));
-    for (int i = 0; i < numVertices - 1; i++) {
-        adjacencyMatrix[i].resize(numVertices);
+    int index = vertices.size();
+    vertices.emplace_back(index);
+
+    for (auto& row : adjacencyMatrix) {
+        row.push_back(std::numeric_limits<int>::max());
     }
+
+    adjacencyMatrix.emplace_back(vertices.size(), std::numeric_limits<int>::max());
 }
 
-void Graph::removeVertex(int vertex) {
-    if (vertex < 0 || vertex >= numVertices) {
-        QMessageBox::critical(nullptr, "Ошибка", "Неверный номер вершины");
-        return;
-    }
-    numVertices--;
-    for (int i = 0; i < numVertices; i++) {
-        adjacencyMatrix[i].erase(adjacencyMatrix[i].begin() + vertex);
+void Graph::removeVertex(int index) {
+    vertices.erase(vertices.begin() + index);
+
+    for (auto& row : adjacencyMatrix) {
+        row.erase(row.begin() + index);
     }
 
-    adjacencyMatrix.erase(adjacencyMatrix.begin() + vertex);
+    adjacencyMatrix.erase(adjacencyMatrix.begin() + index);
 }
 
-vector<std::vector<int>> Graph::getAdjacencyMatrix() const {
+void Graph::addEdge(int from, int to, int weight) {
+    edges.emplace_back(from, to, weight);
+    adjacencyMatrix[from][to] = weight;
+}
+
+void Graph::removeEdge(int from, int to) {
+    for (auto it = edges.begin(); it != edges.end(); ++it) {
+        if (it->from == from && it->to == to) {
+            edges.erase(it);
+            break;
+        }
+    }
+
+    adjacencyMatrix[from][to] = std::numeric_limits<int>::max();
+}
+
+void Graph::setWeight(int from, int to, int weight) {
+    for (auto& edge : edges) {
+        if (edge.from == from && edge.to == to) {
+            edge.weight = weight;
+            break;
+        }
+    }
+
+    adjacencyMatrix[from][to] = weight;
+}
+
+const std::vector<Graph::Edge>& Graph::getEdges() const {
+    return edges;
+}
+
+const std::vector<std::vector<int>>& Graph::getAdjacencyMatrix() const {
     return adjacencyMatrix;
 }
 
-void Graph::removeEdge(int v1, int v2) {
-    if (v1 < 0 || v1 >= numVertices || v2 < 0 || v2 >= numVertices) {
-        QMessageBox::critical(nullptr, "Ошибка", "Неверные номера вершин");
-        return;
-    }
-    adjacencyMatrix[v1][v2] = 0;
-    adjacencyMatrix[v2][v1] = 0;
-}
-
-void Graph::editEdgeWeight(int v1, int v2, int weight) {
-    if (v1 < 0 || v1 >= numVertices || v2 < 0 || v2 >= numVertices) {
-        QMessageBox::critical(nullptr, "Ошибка", "Неверные номера вершин");
-        return;
-    }
-    adjacencyMatrix[v1][v2] = weight;
+const std::vector<Graph::Vertex>& Graph::getVertices() const {
+    return vertices;
 }
